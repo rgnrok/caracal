@@ -2,6 +2,7 @@ require 'open-uri'
 require 'zip'
 
 require 'caracal/header'
+require 'caracal/footer'
 
 require 'caracal/core/bookmarks'
 require 'caracal/core/custom_properties'
@@ -99,6 +100,10 @@ module Caracal
       @header ||= Header.new
     end
 
+    def footer
+      @footer ||= Footer.new
+    end
+
     #------------------------------------------------------
     # Public Instance Methods
     #------------------------------------------------------
@@ -154,6 +159,7 @@ module Caracal
         render_document(zip)
         render_relationships(zip)          # Must go here: Depends on document renderer
         render_header_relationships(zip)   # Must go here: Depends on document renderer
+        render_footer_relationships(zip)   # Must go here: Depends on document renderer
         render_media(zip)                  # Must go here: Depends on document renderer
         render_numbering(zip)              # Must go here: Depends on document renderer
       end
@@ -226,7 +232,7 @@ module Caracal
     end
 
     def render_footer(zip)
-      content = ::Caracal::Renderers::FooterRenderer.render(self)
+      content = ::Caracal::Renderers::FooterRenderer.render(footer)
 
       zip.put_next_entry('word/footer1.xml')
       zip.write(content)
@@ -273,6 +279,15 @@ module Caracal
         content = ::Caracal::Renderers::RelationshipsRenderer.render(header)
 
         zip.put_next_entry('word/_rels/header1.xml.rels')
+        zip.write(content)
+      end
+    end
+
+    def render_footer_relationships(zip)
+      if footer.relationships.any?
+        content = ::Caracal::Renderers::RelationshipsRenderer.render(footer)
+
+        zip.put_next_entry('word/_rels/footer1.xml.rels')
         zip.write(content)
       end
     end
